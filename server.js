@@ -3,7 +3,7 @@ const crypto = require("crypto");
 const path = require("path");
 const express = require("express");
 
-const { buscarPOIs, resolverNicho } = require("./src/descoberta");
+const { buscarPOIs, resolverNicho, nichosSuportados } = require("./src/descoberta");
 const { analisarLista } = require("./src/analise");
 
 const app = express();
@@ -73,6 +73,10 @@ app.get("/api/buscar/:jobId", (req, res) => {
   const job = jobs.get(req.params.jobId);
   if (!job) return res.status(404).json({ erro: "Busca não encontrada." });
   res.json(job);
+});
+
+app.get("/api/nichos", (req, res) => {
+  res.json({ nichos: nichosSuportados() });
 });
 
 app.listen(PORT, () => {

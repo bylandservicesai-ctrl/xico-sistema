@@ -12,37 +12,70 @@
   </header>
 
   <main>
-    <section id="tela-busca" class="tela">
-      <label for="nicho">O que você procura?</label>
-      <input id="nicho" type="text" placeholder="Ex: salão de beleza" autocomplete="off" />
+    <section id="tab-buscar" class="tab-conteudo">
+      <section id="tela-busca" class="tela">
+        <label for="nicho">O que você procura?</label>
+        <input id="nicho" type="text" placeholder="Ex: salão de beleza" autocomplete="off" list="lista-nichos" />
+        <datalist id="lista-nichos"></datalist>
 
-      <label for="cidade">Em qual cidade?</label>
-      <input id="cidade" type="text" placeholder="Ex: Novo Hamburgo" autocomplete="off" />
+        <label for="cidade">Em qual cidade?</label>
+        <input id="cidade" type="text" placeholder="Ex: Novo Hamburgo" autocomplete="off" />
 
-      <button id="btn-buscar" class="botao-principal">Buscar empresas</button>
+        <button id="btn-buscar" class="botao-principal">Buscar empresas</button>
 
-      <p id="mensagem-erro" class="erro" hidden></p>
+        <p id="mensagem-erro" class="erro" hidden></p>
+      </section>
+
+      <section id="tela-progresso" class="tela" hidden>
+        <div id="spinner" class="spinner"></div>
+        <div id="barra-progresso-container" class="barra-progresso-container" hidden>
+          <div id="barra-progresso" class="barra-progresso"></div>
+        </div>
+        <p id="texto-progresso">Buscando empresas...</p>
+      </section>
+
+      <section id="tela-resultado" class="tela" hidden>
+        <div class="resumo">
+          <span id="contagem-resultado"></span>
+          <button id="btn-nova-busca" class="botao-secundario">Nova busca</button>
+        </div>
+
+        <div class="acoes-exportar">
+          <button id="btn-copiar" class="botao-secundario">Copiar lista</button>
+          <button id="btn-csv" class="botao-secundario">Baixar CSV</button>
+        </div>
+
+        <ul id="lista-empresas" class="lista-empresas"></ul>
+      </section>
     </section>
 
-    <section id="tela-progresso" class="tela" hidden>
-      <div class="spinner"></div>
-      <p id="texto-progresso">Buscando empresas...</p>
+    <section id="tab-historico" class="tab-conteudo" hidden>
+      <h2>Buscas recentes</h2>
+      <p id="historico-vazio" class="vazio" hidden>Você ainda não fez nenhuma busca.</p>
+      <ul id="lista-historico" class="lista-historico"></ul>
     </section>
 
-    <section id="tela-resultado" class="tela" hidden>
-      <div class="resumo">
-        <span id="contagem-resultado"></span>
-        <button id="btn-nova-busca" class="botao-secundario">Nova busca</button>
-      </div>
-
-      <div class="acoes-exportar">
-        <button id="btn-copiar" class="botao-secundario">Copiar lista</button>
-        <button id="btn-csv" class="botao-secundario">Baixar CSV</button>
-      </div>
-
-      <ul id="lista-empresas" class="lista-empresas"></ul>
+    <section id="tab-nichos" class="tab-conteudo" hidden>
+      <h2>O que dá pra buscar</h2>
+      <input id="filtro-nichos" type="text" placeholder="Filtrar..." autocomplete="off" />
+      <ul id="lista-nichos-ref" class="lista-nichos-ref"></ul>
     </section>
   </main>
+
+  <nav class="tabs">
+    <button class="tab-btn ativo" data-tab="buscar">
+      <span class="tab-icone">🔍</span>
+      <span>Buscar</span>
+    </button>
+    <button class="tab-btn" data-tab="historico">
+      <span class="tab-icone">🕑</span>
+      <span>Histórico</span>
+    </button>
+    <button class="tab-btn" data-tab="nichos">
+      <span class="tab-icone">📋</span>
+      <span>Nichos</span>
+    </button>
+  </nav>
 
   <script src="app.js"></script>
 </body>
