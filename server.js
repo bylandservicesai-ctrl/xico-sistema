@@ -89,8 +89,37 @@ app.get("/api/diagnostico", async (req, res) => {
     const texto = await r.text();
     resultado.overpass = { status: r.status, ms: Date.now() - inicio, tamanho: texto.length, amostra: texto.slice(0, 200) };
   } catch (err) {
-    resultado.overpass = { erro: err.message, ms: Date.now() - inicio };
+    resultado.overpass = {
+      erro: err.message,
+      causa: err.cause ? { message: err.cause.message, code: err.cause.code } : null,
+      ms: Date.now() - inicio,
+    };
   }
+
+  const inicio2 = Date.now();
+  try {
+    const r2 = await fetch("https://nominatim.openstreetmap.org/search?q=Novo+Hamburgo,+Brazil&format=json&limit=1", {
+      headers: { "User-Agent": "xico-captacao-leads/1.0" },
+    });
+    const texto2 = await r2.text();
+    resultado.nominatim = { status: r2.status, ms: Date.now() - inicio2, amostra: texto2.slice(0, 150) };
+  } catch (err) {
+    resultado.nominatim = {
+      erro: err.message,
+      causa: err.cause ? { message: err.cause.message, code: err.cause.code } : null,
+      ms: Date.now() - inicio2,
+    };
+  }
+
+  const inicio3 = Date.now();
+  try {
+    const r3 = await fetch("https://api.ipify.org?format=json");
+    resultado.meuIp = await r3.json();
+    resultado.meuIp.ms = Date.now() - inicio3;
+  } catch (err) {
+    resultado.meuIp = { erro: err.message };
+  }
+
   res.json(resultado);
 });
 
