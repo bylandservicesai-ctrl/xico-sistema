@@ -152,14 +152,32 @@ function nichosSuportados() {
   return Object.keys(NICHO_PARA_TAG);
 }
 
+function esperar(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// O Nominatim (serviço público e gratuito) às vezes demora ou falha de forma
+// transitória, especialmente vindo de servidores em nuvem compartilhados
+// (Render, etc). Tenta de novo uma vez, com mais tempo, antes de desistir.
 async function geocodificarCidade(cidade) {
   const url = `${NOMINATIM_URL}?q=${encodeURIComponent(cidade + ", Brazil")}&format=json&limit=1`;
-  const resposta = await fetchComTimeout(url, { headers: { "User-Agent": USER_AGENT } }, TIMEOUT_GEOCODE_MS);
-  if (!resposta.ok) throw new Error(`Nominatim retornou ${resposta.status}`);
-  const dados = await resposta.json();
-  if (!dados.length) throw new Error(`Cidade "${cidade}" não encontrada`);
-  const [sul, norte, oeste, leste] = dados[0].boundingbox.map(Number);
-  return { sul, norte, oeste, leste };
+  let ultimoErro;
+
+  for (const timeoutMs of [TIMEOUT_GEOCODE_MS, TIMEOUT_GEOCODE_MS * 2]) {
+    try {
+      const resposta = await fetchComTimeout(url, { headers: { "User-Agent": USER_AGENT } }, timeoutMs);
+      if (!resposta.ok) throw new Error(`Nominatim retornou ${resposta.status}`);
+      const dados = await resposta.json();
+      if (!dados.length) throw new Error(`Cidade "${cidade}" não encontrada`);
+      const [sul, norte, oeste, leste] = dados[0].boundingbox.map(Number);
+      return { sul, norte, oeste, leste };
+    } catch (err) {
+      ultimoErro = err;
+      await esperar(1000);
+    }
+  }
+  if (/cidade .* não encontrada/i.test(ultimoErro.message)) throw ultimoErro;
+  throw new Error(`Não consegui localizar a cidade "${cidade}" agora, tente de novo em instantes`);
 }
 
 function extrairEndereco(tags) {
@@ -212,7 +230,7 @@ async function buscarPOIs(cidade, nichoResolvido, limite = 10) {
       ultimoErro = err;
     }
   }
-  if (!dados) throw new Error(`Não foi possível consultar o mapa agora: ${ultimoErro?.message}`);
+  if (!dados) throw new Error("Não foi possível consultar o mapa agora, tente de novo em instantes");
 
   const nomesVistos = new Set();
 
