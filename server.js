@@ -11,7 +11,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
 const PORT = process.env.PORT || 3000;
-const LIMITE_EMPRESAS = 20;
+const LIMITE_EMPRESAS = 10;
 
 // Jobs em memória: a busca + análise demora (rate limit do Gemini), então o
 // front dispara o job e fica consultando o progresso em vez de segurar uma

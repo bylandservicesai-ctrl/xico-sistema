@@ -172,9 +172,14 @@ function extrairTelefone(tags) {
   return bruto.replace(/\D/g, "");
 }
 
-async function buscarPOIs(cidade, nichoResolvido, limite = 20) {
+async function buscarPOIs(cidade, nichoResolvido, limite = 10) {
   const tag = NICHO_PARA_TAG[nichoResolvido];
   if (!tag) return [];
+
+  // Pede mais elementos do que o limite final: o mesmo estabelecimento às
+  // vezes aparece cadastrado tanto como node quanto como way no OpenStreetMap,
+  // e a deduplicação por nome abaixo pode descartar algumas dessas repetições.
+  const limiteBusca = limite * 3;
 
   const bbox = await geocodificarCidade(cidade);
   const [chave, valor] = tag.split("=");
@@ -184,7 +189,7 @@ async function buscarPOIs(cidade, nichoResolvido, limite = 20) {
       node["${chave}"="${valor}"](${bbox.sul},${bbox.oeste},${bbox.norte},${bbox.leste});
       way["${chave}"="${valor}"](${bbox.sul},${bbox.oeste},${bbox.norte},${bbox.leste});
     );
-    out center tags ${limite};
+    out center tags ${limiteBusca};
   `;
 
   let dados;
@@ -209,8 +214,18 @@ async function buscarPOIs(cidade, nichoResolvido, limite = 20) {
   }
   if (!dados) throw new Error(`Não foi possível consultar o mapa agora: ${ultimoErro?.message}`);
 
+  const nomesVistos = new Set();
+
   return (dados.elements || [])
     .filter((el) => el.tags?.name)
+    .filter((el) => {
+      // Deduplica pelo nome (mesma loja às vezes cadastrada mais de uma vez
+      // no OpenStreetMap, ou como node e way ao mesmo tempo).
+      const chaveNome = normalizar(el.tags.name);
+      if (nomesVistos.has(chaveNome)) return false;
+      nomesVistos.add(chaveNome);
+      return true;
+    })
     .slice(0, limite)
     .map((el) => ({
       id: crypto.randomUUID(),

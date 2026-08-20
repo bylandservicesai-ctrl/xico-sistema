@@ -41,8 +41,8 @@ uso e demora ~30s para acordar na primeira busca do dia — normal, não é bug.
 
 ## Limites
 
-- Até 20 empresas por busca (evita demorar demais e estourar o limite
-  gratuito do Gemini).
-- Nichos reconhecidos: os mesmos do sistema de disparo (salão de beleza,
-  restaurante, oficina, clínica odontológica, academia, etc. — ver a lista
+- Até 10 empresas por busca (evita demorar demais e estourar o limite
+  gratuito do Gemini). A mesma loja nunca aparece duas vezes na lista.
+- Nichos reconhecidos: cerca de 90 termos (salão de beleza, restaurante,
+  oficina, clínica odontológica, academia, loja de roupa, etc. — ver a lista
   completa em `src/descoberta.js`, `NICHO_PARA_TAG`).
