@@ -176,6 +176,7 @@ document.getElementById("btn-buscar").addEventListener("click", buscar);
 document.getElementById("btn-nova-busca").addEventListener("click", () => {
   document.getElementById("nicho").value = "";
   document.getElementById("cidade").value = "";
+  mensagemErro.hidden = true;
   mostrarTela(telaBusca);
 });
 
