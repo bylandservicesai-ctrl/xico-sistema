@@ -17,6 +17,18 @@ const LIMITE_EMPRESAS = 10;
 // front dispara o job e fica consultando o progresso em vez de segurar uma
 // requisição HTTP aberta por 1-2 minutos.
 const jobs = new Map();
+const JOB_TTL_MS = 60 * 60 * 1000; // 1 hora - tempo de sobra pro front consultar o resultado
+
+// Sem isso, cada busca deixaria um job preso na memória pra sempre (o
+// processo do Render fica rodando por dias) - com o tempo isso cresceria
+// sem limite. Marca cada job com a hora de criação e limpa os antigos
+// periodicamente.
+setInterval(() => {
+  const agora = Date.now();
+  for (const [id, job] of jobs) {
+    if (agora - job.criadoEm > JOB_TTL_MS) jobs.delete(id);
+  }
+}, 10 * 60 * 1000);
 
 app.post("/api/buscar", async (req, res) => {
   const nicho = (req.body?.nicho || "").trim();
@@ -34,7 +46,7 @@ app.post("/api/buscar", async (req, res) => {
   }
 
   const jobId = crypto.randomUUID();
-  jobs.set(jobId, { status: "buscando", total: 0, feitos: 0, empresas: [], erro: null });
+  jobs.set(jobId, { status: "buscando", total: 0, feitos: 0, empresas: [], erro: null, criadoEm: Date.now() });
 
   processarJob(jobId, nichoResolvido, cidade).catch((err) => {
     const job = jobs.get(jobId);

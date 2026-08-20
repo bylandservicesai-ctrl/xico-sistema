@@ -23,6 +23,24 @@ Regras:
 - "problema_principal": uma frase curta e concreta (ex: "sem site", "site desatualizado", "sem WhatsApp Business", "depende só de indicação boca a boca"). Nunca genérico como "baixa presença digital".
 - "precisa_automacao": true se o nicho e porte sugerem que agendamento, atendimento ou vendas por WhatsApp ainda são manuais e se beneficiariam de automação (ex: salões, clínicas, oficinas, restaurantes pequenos). false se o negócio tipicamente já não precisa (ex: negócio muito pequeno e informal, ou nicho onde automação não se aplica).`;
 
+function esperar(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// O Gemini às vezes devolve 503 (alta demanda), transitório - tenta de novo
+// algumas vezes antes de desistir, em vez de marcar a empresa como erro.
+async function gerarComRetry(client, params, tentativas = 3) {
+  for (let i = 0; i < tentativas; i++) {
+    try {
+      return await client.models.generateContent(params);
+    } catch (err) {
+      const transitorio = /503|UNAVAILABLE|overloaded|high demand|429|RESOURCE_EXHAUSTED/i.test(err.message || "");
+      if (!transitorio || i === tentativas - 1) throw err;
+      await esperar(2000 * (i + 1));
+    }
+  }
+}
+
 async function analisarEmpresa(client, empresa) {
   const contexto = `Nome: ${empresa.nome_empresa}
 Nicho: ${empresa.nicho}
@@ -30,7 +48,7 @@ Cidade: ${empresa.cidade}
 Endereço: ${empresa.endereco || "não informado"}
 Aparece com site no OpenStreetMap: ${empresa.tem_site_osm ? "sim" : "não"}`;
 
-  const resposta = await client.models.generateContent({
+  const resposta = await gerarComRetry(client, {
     model: MODELO,
     contents: `${PROMPT_SISTEMA}\n\n${contexto}`,
     config: { responseMimeType: "application/json" },
@@ -58,10 +76,6 @@ Aparece com site no OpenStreetMap: ${empresa.tem_site_osm ? "sim" : "não"}`;
     problema_principal: parsed.problema_principal || "",
     precisa_automacao: typeof parsed.precisa_automacao === "boolean" ? parsed.precisa_automacao : null,
   };
-}
-
-function esperar(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 // Analisa a lista inteira, sequencialmente (respeita o limite de requisições
