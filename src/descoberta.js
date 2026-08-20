@@ -5,7 +5,11 @@
 const crypto = require("crypto");
 
 const NOMINATIM_URL = "https://nominatim.openstreetmap.org/search";
-const OVERPASS_URLS = ["https://overpass-api.de/api/interpreter", "https://overpass.osm.ch/api/interpreter"];
+// Só o servidor oficial: os espelhos públicos alternativos testados
+// (overpass.kumi.systems, overpass.osm.ch) se mostraram quebrados ou com
+// base de dados vazia/desatualizada, retornando "sucesso" com zero
+// resultados em vez de erro - pior que não ter fallback nenhum.
+const OVERPASS_URL = "https://overpass-api.de/api/interpreter";
 const TIMEOUT_GEOCODE_MS = 15000;
 const TIMEOUT_OVERPASS_MS = 25000;
 const USER_AGENT = "xico-captacao-leads/1.0 (uso pessoal)";
@@ -212,10 +216,10 @@ async function buscarPOIs(cidade, nichoResolvido, limite = 10) {
 
   let dados;
   let ultimoErro;
-  for (const url of OVERPASS_URLS) {
+  for (let tentativa = 0; tentativa < 2 && !dados; tentativa++) {
     try {
       const resposta = await fetchComTimeout(
-        url,
+        OVERPASS_URL,
         {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded", "User-Agent": USER_AGENT },
@@ -225,9 +229,9 @@ async function buscarPOIs(cidade, nichoResolvido, limite = 10) {
       );
       if (!resposta.ok) throw new Error(`Overpass retornou ${resposta.status}`);
       dados = await resposta.json();
-      break;
     } catch (err) {
       ultimoErro = err;
+      await esperar(1500);
     }
   }
   if (!dados) throw new Error("Não foi possível consultar o mapa agora, tente de novo em instantes");
