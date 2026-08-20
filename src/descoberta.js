@@ -5,11 +5,14 @@
 const crypto = require("crypto");
 
 const NOMINATIM_URL = "https://nominatim.openstreetmap.org/search";
-// Só o servidor oficial: os espelhos públicos alternativos testados
-// (overpass.kumi.systems, overpass.osm.ch) se mostraram quebrados ou com
-// base de dados vazia/desatualizada, retornando "sucesso" com zero
-// resultados em vez de erro - pior que não ter fallback nenhum.
-const OVERPASS_URL = "https://overpass-api.de/api/interpreter";
+// overpass-api.de (o servidor oficial) recusa conexões (ECONNREFUSED) vindas
+// do IP de saída de hospedagens gratuitas como o Render - provavelmente
+// bloqueio por faixa de IP de nuvem, não instabilidade. maps.mail.ru é usado
+// como segundo espelho por aceitar essas conexões e devolver dados reais
+// (testado com sucesso em ambos os ambientes). overpass.kumi.systems e
+// overpass.osm.ch foram testados e descartados: o primeiro retorna erro 500
+// depois de ~55s, o segundo responde rápido mas com base de dados vazia.
+const OVERPASS_URLS = ["https://overpass-api.de/api/interpreter", "https://maps.mail.ru/osm/tools/overpass/api/interpreter"];
 const TIMEOUT_GEOCODE_MS = 15000;
 const TIMEOUT_OVERPASS_MS = 25000;
 const USER_AGENT = "xico-captacao-leads/1.0 (uso pessoal)";
@@ -214,12 +217,19 @@ async function buscarPOIs(cidade, nichoResolvido, limite = 10) {
     out center tags ${limiteBusca};
   `;
 
-  let dados;
+  // Tenta cada espelho do Overpass em ordem. Um espelho que responde "com
+  // sucesso" mas devolve zero elementos (ex: base de dados desatualizada)
+  // não é aceito de imediato - só vira o resultado final se nenhum outro
+  // espelho achar nada real, pra não confundir "esse espelho está vazio"
+  // com "não existe empresa nenhuma nessa cidade".
+  let dados = null;
+  let resultadoVazio = null;
   let ultimoErro;
-  for (let tentativa = 0; tentativa < 2 && !dados; tentativa++) {
+
+  for (const url of OVERPASS_URLS) {
     try {
       const resposta = await fetchComTimeout(
-        OVERPASS_URL,
+        url,
         {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded", "User-Agent": USER_AGENT },
@@ -227,13 +237,19 @@ async function buscarPOIs(cidade, nichoResolvido, limite = 10) {
         },
         TIMEOUT_OVERPASS_MS
       );
-      if (!resposta.ok) throw new Error(`Overpass retornou ${resposta.status}`);
-      dados = await resposta.json();
+      if (!resposta.ok) throw new Error(`Overpass (${url}) retornou ${resposta.status}`);
+      const json = await resposta.json();
+      if ((json.elements || []).length > 0) {
+        dados = json;
+        break;
+      }
+      resultadoVazio = json;
     } catch (err) {
       ultimoErro = err;
-      await esperar(1500);
     }
   }
+
+  if (!dados) dados = resultadoVazio;
   if (!dados) throw new Error("Não foi possível consultar o mapa agora, tente de novo em instantes");
 
   const nomesVistos = new Set();

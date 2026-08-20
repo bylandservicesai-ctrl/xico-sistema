@@ -75,54 +75,6 @@ app.get("/api/buscar/:jobId", (req, res) => {
   res.json(job);
 });
 
-// Diagnóstico temporário: testa se o próprio servidor consegue falar com o
-// Overpass, pra descartar bloqueio de rede/IP específico do Render.
-app.get("/api/diagnostico", async (req, res) => {
-  const resultado = {};
-  const inicio = Date.now();
-  try {
-    const r = await fetch("https://overpass-api.de/api/interpreter", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: "data=" + encodeURIComponent('[out:json][timeout:20];node["shop"="hairdresser"](-29.83,-51.18,-29.64,-50.93);out center tags 5;'),
-    });
-    const texto = await r.text();
-    resultado.overpass = { status: r.status, ms: Date.now() - inicio, tamanho: texto.length, amostra: texto.slice(0, 200) };
-  } catch (err) {
-    resultado.overpass = {
-      erro: err.message,
-      causa: err.cause ? { message: err.cause.message, code: err.cause.code } : null,
-      ms: Date.now() - inicio,
-    };
-  }
-
-  const inicio2 = Date.now();
-  try {
-    const r2 = await fetch("https://nominatim.openstreetmap.org/search?q=Novo+Hamburgo,+Brazil&format=json&limit=1", {
-      headers: { "User-Agent": "xico-captacao-leads/1.0" },
-    });
-    const texto2 = await r2.text();
-    resultado.nominatim = { status: r2.status, ms: Date.now() - inicio2, amostra: texto2.slice(0, 150) };
-  } catch (err) {
-    resultado.nominatim = {
-      erro: err.message,
-      causa: err.cause ? { message: err.cause.message, code: err.cause.code } : null,
-      ms: Date.now() - inicio2,
-    };
-  }
-
-  const inicio3 = Date.now();
-  try {
-    const r3 = await fetch("https://api.ipify.org?format=json");
-    resultado.meuIp = await r3.json();
-    resultado.meuIp.ms = Date.now() - inicio3;
-  } catch (err) {
-    resultado.meuIp = { erro: err.message };
-  }
-
-  res.json(resultado);
-});
-
 app.listen(PORT, () => {
   console.log(`Xico - captação de leads rodando em http://localhost:${PORT}`);
 });
