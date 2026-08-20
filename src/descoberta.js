@@ -51,6 +51,16 @@ const NICHO_PARA_TAG = {
   floricultura: "shop=florist",
   ótica: "shop=optician",
   joalheria: "shop=jewelry",
+  "loja de roupa": "shop=clothes",
+  roupas: "shop=clothes",
+  moda: "shop=clothes",
+  "loja de calçados": "shop=shoes",
+  sapataria: "shop=shoes",
+  papelaria: "shop=stationery",
+  "loja de celular": "shop=mobile_phone",
+  "assistência técnica": "shop=mobile_phone",
+  móveis: "shop=furniture",
+  marcenaria: "shop=furniture",
 };
 
 function normalizar(texto) {
