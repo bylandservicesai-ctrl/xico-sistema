@@ -1,0 +1,198 @@
+:root {
+  --azul: #1a73e8;
+  --azul-escuro: #0d47a1;
+  --verde: #1e8e3e;
+  --vermelho: #d93025;
+  --cinza-texto: #444;
+  --cinza-borda: #ddd;
+  --fundo: #f7f8fa;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  background: var(--fundo);
+  color: #1a1a1a;
+}
+
+.topo {
+  background: var(--azul);
+  color: #fff;
+  padding: 20px 16px;
+  text-align: center;
+}
+
+.topo h1 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+main {
+  padding: 20px 16px 60px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.tela {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+label {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+input[type="text"] {
+  font-size: 1.15rem;
+  padding: 16px;
+  border: 2px solid var(--cinza-borda);
+  border-radius: 12px;
+  width: 100%;
+}
+
+input[type="text"]:focus {
+  outline: none;
+  border-color: var(--azul);
+}
+
+button {
+  font-size: 1.15rem;
+  font-weight: 600;
+  padding: 18px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+}
+
+.botao-principal {
+  background: var(--azul);
+  color: #fff;
+  margin-top: 12px;
+}
+
+.botao-principal:active {
+  background: var(--azul-escuro);
+}
+
+.botao-secundario {
+  background: #fff;
+  color: var(--azul);
+  border: 2px solid var(--azul);
+}
+
+.erro {
+  background: #fde7e6;
+  color: var(--vermelho);
+  padding: 14px;
+  border-radius: 10px;
+  font-size: 1rem;
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 5px solid var(--cinza-borda);
+  border-top-color: var(--azul);
+  border-radius: 50%;
+  margin: 60px auto 0;
+  animation: girar 0.9s linear infinite;
+}
+
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+#texto-progresso {
+  text-align: center;
+  font-size: 1.1rem;
+  color: var(--cinza-texto);
+}
+
+.resumo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.resumo #contagem-resultado {
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+
+.resumo .botao-secundario {
+  width: auto;
+  padding: 10px 16px;
+  font-size: 0.95rem;
+}
+
+.acoes-exportar {
+  display: flex;
+  gap: 10px;
+}
+
+.acoes-exportar button {
+  padding: 14px;
+  font-size: 1rem;
+}
+
+.lista-empresas {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card-empresa {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.card-empresa h3 {
+  margin: 0 0 8px;
+  font-size: 1.1rem;
+}
+
+.card-empresa .linha {
+  font-size: 0.95rem;
+  color: var(--cinza-texto);
+  margin: 4px 0;
+}
+
+.tag {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  margin-right: 6px;
+}
+
+.tag.sim {
+  background: #e6f4ea;
+  color: var(--verde);
+}
+
+.tag.nao {
+  background: #fde7e6;
+  color: var(--vermelho);
+}
+
+.tag.duvida {
+  background: #eee;
+  color: #666;
+}

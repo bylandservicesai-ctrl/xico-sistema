@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+<title>Captação de Leads</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topo">
+    <h1>Captação de Leads</h1>
+  </header>
+
+  <main>
+    <section id="tela-busca" class="tela">
+      <label for="nicho">O que você procura?</label>
+      <input id="nicho" type="text" placeholder="Ex: salão de beleza" autocomplete="off" />
+
+      <label for="cidade">Em qual cidade?</label>
+      <input id="cidade" type="text" placeholder="Ex: Novo Hamburgo" autocomplete="off" />
+
+      <button id="btn-buscar" class="botao-principal">Buscar empresas</button>
+
+      <p id="mensagem-erro" class="erro" hidden></p>
+    </section>
+
+    <section id="tela-progresso" class="tela" hidden>
+      <div class="spinner"></div>
+      <p id="texto-progresso">Buscando empresas...</p>
+    </section>
+
+    <section id="tela-resultado" class="tela" hidden>
+      <div class="resumo">
+        <span id="contagem-resultado"></span>
+        <button id="btn-nova-busca" class="botao-secundario">Nova busca</button>
+      </div>
+
+      <div class="acoes-exportar">
+        <button id="btn-copiar" class="botao-secundario">Copiar lista</button>
+        <button id="btn-csv" class="botao-secundario">Baixar CSV</button>
+      </div>
+
+      <ul id="lista-empresas" class="lista-empresas"></ul>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
