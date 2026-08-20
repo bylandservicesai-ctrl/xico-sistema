@@ -19,38 +19,63 @@ async function fetchComTimeout(url, opcoes) {
   }
 }
 
-// Mapa nicho (portugues) -> tag do OpenStreetMap.
+// Mapa nicho (portugues) -> tag do OpenStreetMap. Cobre os pequenos negocios
+// mais comuns no Brasil; varias entradas repetem a mesma tag como sinonimos
+// (ex: "cabeleireiro" e "barbearia" caem na mesma tag que "salao de beleza").
 const NICHO_PARA_TAG = {
+  // Alimentação
   restaurante: "amenity=restaurant",
   pizzaria: "amenity=restaurant",
+  churrascaria: "amenity=restaurant",
   lanchonete: "amenity=fast_food",
+  "fast food": "amenity=fast_food",
+  hamburgueria: "amenity=fast_food",
+  pastelaria: "amenity=fast_food",
+  sorveteria: "amenity=ice_cream",
+  açaiteria: "amenity=ice_cream",
+  cafeteria: "amenity=cafe",
+  café: "amenity=cafe",
+  bar: "amenity=bar",
+  pub: "amenity=pub",
   padaria: "shop=bakery",
+  confeitaria: "shop=bakery",
+  doceria: "shop=confectionery",
+  açougue: "shop=butcher",
+  peixaria: "shop=seafood",
+  hortifruti: "shop=greengrocer",
+  adega: "shop=alcohol",
+  "distribuidora de bebidas": "shop=alcohol",
+
+  // Beleza e saúde
+  "salão de beleza": "shop=hairdresser",
+  cabeleireiro: "shop=hairdresser",
+  barbearia: "shop=hairdresser",
+  manicure: "shop=beauty",
+  estética: "shop=beauty",
+  spa: "leisure=spa",
   "clínica odontológica": "amenity=dentist",
   odontologia: "amenity=dentist",
   dentista: "amenity=dentist",
   clínica: "amenity=clinic",
-  "salão de beleza": "shop=hairdresser",
-  cabeleireiro: "shop=hairdresser",
-  barbearia: "shop=hairdresser",
-  estética: "shop=beauty",
-  academia: "leisure=fitness_centre",
-  oficina: "shop=car_repair",
-  "estética automotiva": "shop=car_repair",
-  imobiliária: "office=estate_agent",
-  contabilidade: "office=accountant",
-  contador: "office=accountant",
-  arquitetura: "office=architect",
-  advocacia: "office=lawyer",
-  advogado: "office=lawyer",
-  "pet shop": "shop=pet",
+  "clínica médica": "amenity=clinic",
+  hospital: "amenity=hospital",
   farmácia: "amenity=pharmacy",
-  mercado: "shop=supermarket",
-  mercadinho: "shop=supermarket",
-  hotel: "tourism=hotel",
-  pousada: "tourism=guest_house",
-  floricultura: "shop=florist",
-  ótica: "shop=optician",
-  joalheria: "shop=jewelry",
+  veterinária: "amenity=veterinary",
+  "pet shop": "shop=pet",
+  academia: "leisure=fitness_centre",
+  crossfit: "leisure=fitness_centre",
+  pilates: "leisure=fitness_centre",
+
+  // Automotivo
+  oficina: "shop=car_repair",
+  mecânica: "shop=car_repair",
+  "estética automotiva": "shop=car_repair",
+  borracharia: "shop=tyres",
+  "auto peças": "shop=car_parts",
+  "lava rápido": "shop=car_wash",
+  concessionária: "shop=car",
+
+  // Varejo / lojas
   "loja de roupa": "shop=clothes",
   roupas: "shop=clothes",
   moda: "shop=clothes",
@@ -59,8 +84,45 @@ const NICHO_PARA_TAG = {
   papelaria: "shop=stationery",
   "loja de celular": "shop=mobile_phone",
   "assistência técnica": "shop=mobile_phone",
+  eletrônica: "shop=electronics",
+  informática: "shop=computer",
   móveis: "shop=furniture",
   marcenaria: "shop=furniture",
+  "material de construção": "shop=hardware",
+  ferragens: "shop=hardware",
+  tintas: "shop=paint",
+  livraria: "shop=books",
+  brinquedos: "shop=toys",
+  joalheria: "shop=jewelry",
+  ótica: "shop=optician",
+  floricultura: "shop=florist",
+  mercado: "shop=supermarket",
+  mercadinho: "shop=supermarket",
+  conveniência: "shop=convenience",
+
+  // Serviços e profissionais
+  imobiliária: "office=estate_agent",
+  contabilidade: "office=accountant",
+  contador: "office=accountant",
+  arquitetura: "office=architect",
+  advocacia: "office=lawyer",
+  advogado: "office=lawyer",
+  seguros: "office=insurance",
+  "agência de viagens": "office=travel_agent",
+  gráfica: "shop=copyshop",
+  lavanderia: "shop=laundry",
+  costureira: "craft=tailor",
+  alfaiataria: "craft=tailor",
+  chaveiro: "shop=locksmith",
+
+  // Hospedagem
+  hotel: "tourism=hotel",
+  pousada: "tourism=guest_house",
+  hostel: "tourism=hostel",
+
+  // Educação
+  escola: "amenity=school",
+  autoescola: "amenity=driving_school",
 };
 
 function normalizar(texto) {
