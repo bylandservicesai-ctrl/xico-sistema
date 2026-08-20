@@ -6,12 +6,13 @@ const crypto = require("crypto");
 
 const NOMINATIM_URL = "https://nominatim.openstreetmap.org/search";
 const OVERPASS_URLS = ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter"];
-const TIMEOUT_MS = 20000;
+const TIMEOUT_GEOCODE_MS = 15000;
+const TIMEOUT_OVERPASS_MS = 45000;
 const USER_AGENT = "xico-captacao-leads/1.0 (uso pessoal)";
 
-async function fetchComTimeout(url, opcoes) {
+async function fetchComTimeout(url, opcoes, timeoutMs) {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     return await fetch(url, { ...opcoes, signal: controller.signal });
   } finally {
@@ -153,7 +154,7 @@ function nichosSuportados() {
 
 async function geocodificarCidade(cidade) {
   const url = `${NOMINATIM_URL}?q=${encodeURIComponent(cidade + ", Brazil")}&format=json&limit=1`;
-  const resposta = await fetchComTimeout(url, { headers: { "User-Agent": USER_AGENT } });
+  const resposta = await fetchComTimeout(url, { headers: { "User-Agent": USER_AGENT } }, TIMEOUT_GEOCODE_MS);
   if (!resposta.ok) throw new Error(`Nominatim retornou ${resposta.status}`);
   const dados = await resposta.json();
   if (!dados.length) throw new Error(`Cidade "${cidade}" não encontrada`);
@@ -178,23 +179,27 @@ async function buscarPOIs(cidade, nichoResolvido, limite = 20) {
   const bbox = await geocodificarCidade(cidade);
   const [chave, valor] = tag.split("=");
   const query = `
-    [out:json][timeout:25];
+    [out:json][timeout:40];
     (
       node["${chave}"="${valor}"](${bbox.sul},${bbox.oeste},${bbox.norte},${bbox.leste});
       way["${chave}"="${valor}"](${bbox.sul},${bbox.oeste},${bbox.norte},${bbox.leste});
     );
-    out center tags;
+    out center tags ${limite};
   `;
 
   let dados;
   let ultimoErro;
   for (const url of OVERPASS_URLS) {
     try {
-      const resposta = await fetchComTimeout(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded", "User-Agent": USER_AGENT },
-        body: `data=${encodeURIComponent(query)}`,
-      });
+      const resposta = await fetchComTimeout(
+        url,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded", "User-Agent": USER_AGENT },
+          body: `data=${encodeURIComponent(query)}`,
+        },
+        TIMEOUT_OVERPASS_MS
+      );
       if (!resposta.ok) throw new Error(`Overpass retornou ${resposta.status}`);
       dados = await resposta.json();
       break;
