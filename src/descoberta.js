@@ -5,9 +5,9 @@
 const crypto = require("crypto");
 
 const NOMINATIM_URL = "https://nominatim.openstreetmap.org/search";
-const OVERPASS_URLS = ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter"];
+const OVERPASS_URLS = ["https://overpass-api.de/api/interpreter", "https://overpass.osm.ch/api/interpreter"];
 const TIMEOUT_GEOCODE_MS = 15000;
-const TIMEOUT_OVERPASS_MS = 45000;
+const TIMEOUT_OVERPASS_MS = 25000;
 const USER_AGENT = "xico-captacao-leads/1.0 (uso pessoal)";
 
 async function fetchComTimeout(url, opcoes, timeoutMs) {
