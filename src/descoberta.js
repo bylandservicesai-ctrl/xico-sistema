@@ -201,10 +201,11 @@ async function buscarPOIs(cidade, nichoResolvido, limite = 10) {
   const tag = NICHO_PARA_TAG[nichoResolvido];
   if (!tag) return [];
 
-  // Pede mais elementos do que o limite final: o mesmo estabelecimento às
-  // vezes aparece cadastrado tanto como node quanto como way no OpenStreetMap,
-  // e a deduplicação por nome abaixo pode descartar algumas dessas repetições.
-  const limiteBusca = limite * 3;
+  // Pede bem mais elementos do que o limite final: a maioria das empresas no
+  // OpenStreetMap não tem telefone cadastrado, e só as que têm interessam
+  // (sem telefone não dá pra prospectar por WhatsApp). Também cobre a
+  // duplicação de node+way do mesmo estabelecimento.
+  const limiteBusca = Math.min(limite * 15, 200);
 
   const bbox = await geocodificarCidade(cidade);
   const [chave, valor] = tag.split("=");
@@ -255,7 +256,7 @@ async function buscarPOIs(cidade, nichoResolvido, limite = 10) {
   const nomesVistos = new Set();
 
   return (dados.elements || [])
-    .filter((el) => el.tags?.name)
+    .filter((el) => el.tags?.name && extrairTelefone(el.tags))
     .filter((el) => {
       // Deduplica pelo nome (mesma loja às vezes cadastrada mais de uma vez
       // no OpenStreetMap, ou como node e way ao mesmo tempo).

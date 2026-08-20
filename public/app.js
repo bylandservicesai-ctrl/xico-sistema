@@ -128,7 +128,7 @@ function acompanharJob(jobId, nicho, cidade) {
           clearInterval(intervalo);
           empresasAtuais = job.empresas;
           if (!empresasAtuais.length) {
-            reject(new Error("Nenhuma empresa encontrada para essa busca. Tente outro nicho ou cidade."));
+            reject(new Error("Nenhuma empresa com telefone cadastrado encontrada para essa busca. Tente outro nicho ou cidade."));
             return;
           }
           salvarNoHistorico(nicho, cidade, empresasAtuais);
