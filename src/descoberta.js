@@ -5,6 +5,12 @@
 const crypto = require("crypto");
 
 const NOMINATIM_URL = "https://nominatim.openstreetmap.org/search";
+// Segundo provedor de geocodificação (também gratuito, dados do OSM) - usado
+// quando o Nominatim falha vindo do IP do Render. Provedores públicos como
+// esse aplicam limite de uso por IP; times diferentes (Nominatim é mantido
+// pela OSM Foundation, Photon é mantido pela Komoot) reduzem a chance dos
+// dois estarem bloqueados/instáveis ao mesmo tempo pro mesmo IP.
+const PHOTON_URL = "https://photon.komoot.io/api/";
 // overpass-api.de (o servidor oficial) recusa conexões (ECONNREFUSED) vindas
 // do IP de saída de hospedagens gratuitas como o Render - provavelmente
 // bloqueio por faixa de IP de nuvem, não instabilidade. maps.mail.ru é usado
@@ -163,27 +169,52 @@ function esperar(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// O Nominatim (serviço público e gratuito) às vezes demora ou falha de forma
-// transitória, especialmente vindo de servidores em nuvem compartilhados
-// (Render, etc). Tenta de novo uma vez, com mais tempo, antes de desistir.
-async function geocodificarCidade(cidade) {
+async function geocodificarViaNominatim(cidade, timeoutMs) {
   const url = `${NOMINATIM_URL}?q=${encodeURIComponent(cidade + ", Brazil")}&format=json&limit=1`;
+  const resposta = await fetchComTimeout(url, { headers: { "User-Agent": USER_AGENT } }, timeoutMs);
+  if (!resposta.ok) throw new Error(`Nominatim retornou ${resposta.status}`);
+  const dados = await resposta.json();
+  if (!dados.length) throw new Error(`Cidade "${cidade}" não encontrada`);
+  const [sul, norte, oeste, leste] = dados[0].boundingbox.map(Number);
+  return { sul, norte, oeste, leste };
+}
+
+async function geocodificarViaPhoton(cidade, timeoutMs) {
+  const url = `${PHOTON_URL}?q=${encodeURIComponent(cidade + ", Brazil")}&limit=1&osm_tag=place`;
+  const resposta = await fetchComTimeout(url, {}, timeoutMs);
+  if (!resposta.ok) throw new Error(`Photon retornou ${resposta.status}`);
+  const dados = await resposta.json();
+  const extensao = dados.features?.[0]?.properties?.extent;
+  if (!extensao) throw new Error(`Cidade "${cidade}" não encontrada`);
+  const [oeste, norte, leste, sul] = extensao;
+  return { sul, norte, oeste, leste };
+}
+
+// O Nominatim (serviço público e gratuito) às vezes falha vindo de
+// servidores em nuvem compartilhados (Render, etc) - já vimos tanto lentidão
+// pontual quanto bloqueio mais persistente. Tenta de novo, e se continuar
+// falhando cai pro Photon (outro geocodificador gratuito, mantido por uma
+// equipe diferente, com base OSM equivalente).
+async function geocodificarCidade(cidade) {
   let ultimoErro;
 
   for (const timeoutMs of [TIMEOUT_GEOCODE_MS, TIMEOUT_GEOCODE_MS * 2]) {
     try {
-      const resposta = await fetchComTimeout(url, { headers: { "User-Agent": USER_AGENT } }, timeoutMs);
-      if (!resposta.ok) throw new Error(`Nominatim retornou ${resposta.status}`);
-      const dados = await resposta.json();
-      if (!dados.length) throw new Error(`Cidade "${cidade}" não encontrada`);
-      const [sul, norte, oeste, leste] = dados[0].boundingbox.map(Number);
-      return { sul, norte, oeste, leste };
+      return await geocodificarViaNominatim(cidade, timeoutMs);
     } catch (err) {
       ultimoErro = err;
+      if (/não encontrada/i.test(err.message)) throw err;
       await esperar(1000);
     }
   }
-  if (/cidade .* não encontrada/i.test(ultimoErro.message)) throw ultimoErro;
+
+  try {
+    return await geocodificarViaPhoton(cidade, TIMEOUT_GEOCODE_MS);
+  } catch (err) {
+    if (/não encontrada/i.test(err.message)) throw err;
+    ultimoErro = err;
+  }
+
   throw new Error(`Não consegui localizar a cidade "${cidade}" agora, tente de novo em instantes`);
 }
 
